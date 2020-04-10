@@ -154,9 +154,263 @@ SELECT facid, SUM(slots) AS "Total Slots" FROM cd.bookings WHERE starttime >= '2
 SELECT facid, SUM(slots) AS "Total Slots" FROM cd.bookings GROUP BY facid HAVING SUM(slots) > 1000 ORDER BY facid;
 SELECT bks.starttime AS START, facs.name AS name FROM cd.facilities facs INNER JOIN cd.bookings bks ON facs.facid = bks.facid WHERE facs.facid IN (0,1) AND bks.starttime >= '2012-09-21' AND bks.starttime < '2012-09-22' ORDER BY bks.starttime;
 SELECT bks.starttime FROM cd.bookings bks INNER JOIN cd.members mems ON mems.memid = bks.memid WHERE mems.firstname='David' AND mems.surname='Farrell';
+
+-- CREATE TABLE SECTION
+CREATE DATABASE learning;
+CREATE TABLE account(
+  user_id SERIAL PRIMARY KEY NOT NULL,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(50) NOT NULL,
+  email VARCHAR(250) UNIQUE NOT NULL,
+  created_on TIMESTAMP NOT NULL,
+  last_login TIMESTAMP
+)
+CREATE TABLE job(
+  job_id SERIAL PRIMARY KEY NOT NULL,
+  job_name VARCHAR(200) UNIQUE NOT NULL
  
+)
+CREATE TABLE account_job(
+  user_id INTEGER REFERENCES account(user_id),
+  job_id INTEGER REFERENCES job(job_id),
+  hire_date TIMESTAMP
+)
+INSERT INTO account(username,password,email,created_on)
+VALUES('Jose', 'viva', 'vivajose@gmail.com',CURRENT_TIMESTAMP);
+
+INSERT INTO account_job(user_id,job_id,hire_date)
+VALUES(1,1,CURRENT_TIMESTAMP)
+
+INSERT INTO job(job_name)
+VALUES('Carpenter')
+
+INSERT INTO job(job_name)
+VALUES('musician')
+
+UPDATE account
+SET last_login = created_on;
+
+UPDATE account_job
+SET hire_date = account.created_on
+FROM account
+WHERE account_job.user_id = account.user_id;
+
+UPDATE account
+SET last_login = CURRENT_TIMESTAMP
+RETURNING email, created_on, last_login;
+
+DELETE FROM table WHERE row_id=1;
+DELETE FROM tableA
+USING tableB WHERE tableA.id=tableB.id
+
+DELETE FROM job WHERE job_name = 'killer' RETURNING job_id,job_name;
+
+ALTER TABLE information
+RENAME TO new_info;
+
+ALTER TABLE new_info
+RENAME COLUMN person TO people;
+
+ALTER TABLE new_info
+ALTER COLUMN people DROP NOT NULL;
+
+ALTER TABLE new_info
+ALTER COLUMN people SET NOT NULL;
+
+ALTER TABLE new_info
+DROP COLUMN people;
+
+ALTER TABLE new_info
+DROP COLUMN IF EXISTS people;
  
- 
+ CREATE TABLE employees(
+  emp_id SERIAL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	birthdate DATE CHECK (birthdate > '1900-01-01'),
+	hire_date DATE CHECK (hire_date > birthdate),
+	salary INTEGER CHECK (salary > 0)
+)
+
+-- This will fail on check constraints
+INSERT INTO employees(
+	first_name,
+	last_name,
+	birthdate,
+	hire_date,
+	salary
+)
+VALUES(
+'Jose',
+	'Chicano',
+	'1899-11-03',
+	'2010-01-01',
+	100
+)
+
+INSERT INTO employees(
+	first_name,
+	last_name,
+	birthdate,
+	hire_date,
+	salary
+)
+VALUES(
+'Jose',
+	'Chicano',
+	'1990-11-03',
+	'2010-01-01',
+	100
+)
+
+CREATE TABLE students(
+	student_id SERIAL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	homeroom_number INTEGER NOT NULL,
+	phone VARCHAR(50) UNIQUE NOT NULL,
+	email VARCHAR(250) UNIQUE NOT NULL,
+	graduation_year INTEGER NOT NULL
+	
+)
+
+CREATE TABLE teachers(
+	teacher_id SERIAL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	homeroom_number INTEGER NOT NULL,
+	department VARCHAR(250) NOT NULL,
+	phone VARCHAR(50) UNIQUE NOT NULL,
+	email VARCHAR(250) UNIQUE NOT NULL
+	
+)
+
+INSERT INTO (first_name,last_name,homeroom_number,phone,email,graduation_year)
+VALUES('Mark','Watney', 5, '777-555-1234', 'N/A', 2035);
+
+
+INSERT INTO teachers(first_name,last_name,homeroom_number,department,phone,email)
+VALUES('Jonas','Salk', 5, 'Biology','777-555-4231', 'jsalk@school.org');
+
+
+SELECT customer_id,
+CASE
+WHEN (customer_id <= 100) THEN 'Premium'
+WHEN (customer_id BETWEEN 100 AND 200) THEN 'Plus'
+ELSE 'Normal' 
+END AS status
+FROM customer;
+
+SELECT customer_id,
+CASE customer_id
+WHEN 2 THEN 'Winner'
+WHEN 5 THEN 'Second Place'
+ELSE 'Normal'
+END AS raffle_results
+FROM customer;
+
+SELECT
+SUM(CASE rental_rate 
+WHEN 0.99 THEN 1
+ELSE 0
+END) AS number_of_bargains
+FROM film;
+
+SELECT
+SUM(CASE rental_rate 
+WHEN 0.99 THEN 1
+ELSE 0
+END) AS bargains,
+SUM(CASE rental_rate 
+WHEN 2.99 THEN 1
+ELSE 0
+END) AS regular
+FROM film;
+
+SELECT
+SUM(CASE rental_rate 
+WHEN 0.99 THEN 1
+ELSE 0
+END) AS bargains,
+SUM(CASE rental_rate 
+WHEN 2.99 THEN 1
+ELSE 0
+END) AS regular,
+SUM(CASE rental_rate 
+WHEN 4.99 THEN 1
+ELSE 0
+END) AS premium
+FROM film;
+
+SELECT
+SUM(CASE rating 
+WHEN 'R' THEN 1 ELSE 0
+END) AS r,
+SUM(CASE rating 
+WHEN 'PG-13' THEN 1 ELSE 0
+END) AS pg_13,
+SUM(CASE rating 
+WHEN 'PG' THEN 1 ELSE 0
+END) AS pg,
+SUM(CASE rating 
+WHEN 'G' THEN 1 ELSE 0
+END) AS g
+FROM film;
+
+
+-- This is the only thing covered on Coalesce. It basically changes a null value to a specified integer to be able to perform accurate mathematical calculations, instead of getting a null result in the query return. 
+
+SELECT item,(price-COALESCE(discout,)) AS final FROM table;
+
+SELECT CAST('5' AS INTEGER);
+--This fails
+SELECT CAST('five' AS INTEGER);
+--Works the same way with the operator
+SELECT '5'::INTEGER;
+
+SELECT CHAR_LENGTH(CAST(inventory_id AS VARCHAR)) FROM rental;
+
+SELECT(
+  SUM(CASE WHEN department = 'A'THEN 1 ELSE 0 END)/
+  SUM(CASE WHEN department = 'B' THEN 1 ELSE 0 END)
+  AS ratio
+  FROM depts
+);
+
+
+SELECT(
+  SUM(CASE WHEN department = 'A'THEN 1 ELSE 0 END)/
+  NULLIF(
+  SUM(CASE WHEN department = 'B' THEN 1 ELSE 0 END),0
+  )
+  AS ratio
+  FROM depts
+);
+
+--View is like making a common query a shortcut keyword
+
+CREATE VIEW customer_info AS
+SELECT first_name,last_name,address FROM customer 
+INNER JOIN address
+ON customer.address_id = address.adress_id;
+
+--Same action
+SELECT * FROM customer_info;
+
+CREATE OR REPLACE VIEW customer_info AS
+SELECT first_name,last_name,address,district FROM customer 
+INNER JOIN address
+ON customer.address_id = address.adress_id;
+
+DROP VIEW IF EXISTS customer_info;
+
+ALTER VIEW customer_info RENAME TO almost_done;
+
+--To import a .csv file, you need full path, and you have to create the table first. The copy or import assumes that your database and table are already setup.(csv = comma seperated values)
+
+--Right click on a table, click import/export. Then you need full file path. Header, YES. It matches both database and csv. Delimiter = , Quote = " or '
+
+
 
 
 
